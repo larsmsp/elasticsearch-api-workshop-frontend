@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
-import { Search } from 'semantic-ui-react'
+import { Input, Grid, Button, Loader } from 'semantic-ui-react'
+import SearchResults from './SearchResult'
 
 export default class SearchBox extends Component {
     
@@ -7,26 +8,33 @@ export default class SearchBox extends Component {
         this.resetComponent()
     }
 
-    resetComponent = () => this.setState({ isLoading: false, results: [], value: '' })
+    resetComponent = () => this.setState({ isActive: false, results: [], query: '', endpoint: '' })
 
     handleSearchResponse = (json) => {
         this.setState({
-            isLoading: false,
+            isActive: false,
             results: json.results,
         })
     }
 
-    handleResultSelect = (e, result) => window.location.href = result.url
+    handleSearchError = (err) => {
+        this.setState({
+            isActive: false,
+            results: []
+        })
+    }
 
     handleSearchChange = (e, value) => {
-        this.setState({ isLoading: true, value })
+        this.setState({ isActive: true, value })
 
         setTimeout(() => {
-            if (this.state.value.length < 1) return this.resetComponent()
+            if (this.state.query.length < 1) {
+                return this.resetComponent()
+            }
 
-            if (this.state.value.length >= 3) {
-                let query = encodeURI(this.state.value.replace(/\s/gi, '+'))
-                fetch(`http://localhost:5000/search/public?q=${query}`, {
+            if (this.state.query.length >= 3) {
+                let query = encodeURI(this.state.query.replace(/\s/gi, '+'))
+                fetch(`${ this.state.endpoint }=${ query }`, {
                     method: 'GET'
                 }).then(function(response) {
                     if (response.ok) {
@@ -34,22 +42,34 @@ export default class SearchBox extends Component {
                     }
                     throw Error(response.status.toString())
                 }).then((json) => this.handleSearchResponse(json))
+                .catch((err) => this.handleSearchError(err))
             }
-        }, 500)
+        }, 1)
+    }
+
+    handleEndpointChange = (e, data) => {
+        this.setState({ endpoint: data.value })
+    }
+
+    handleQueryChange = (e, data) => {
+        this.setState({ query: data.value })
     }
 
     render() {
-        const { isLoading, value, results } = this.state
+        const { results, isActive } = this.state
 
         return (
-            <Search 
-                loading={isLoading}
-                onResultSelect={this.handleResultSelect}
-                onSearchChange={this.handleSearchChange}
-                results={results}
-                value={value}
-                {...this.props}
-            />
+            <Grid textAlign={'center'}>
+                <Grid.Row>
+                    <Input label={'Endpoint and query parameter:'} onChange={this.handleEndpointChange} size={'large'} />
+                    <Input label={'='} onChange={this.handleQueryChange} size={'large'} />
+                    <Button primary content={'Search'} size={'large'} onClick={this.handleSearchChange} />
+                </Grid.Row>
+                <Grid.Row>
+                    <Loader content={'Searching...'} active={isActive} size={'huge'} />
+                    <SearchResults results={results} />
+                </Grid.Row>
+            </Grid>
         )
     }
 }

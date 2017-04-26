@@ -7,7 +7,7 @@ import 'semantic-ui/dist/semantic.css'
 
 
 const SearchUI = () => (
-        <SearchBox resultRenderer={SearchResult} fluid size={'large'} />
+        <SearchBox />
 )
 
 export default SearchUI

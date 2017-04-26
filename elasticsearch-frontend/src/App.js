@@ -7,7 +7,7 @@ import './App.css';
 class App extends Component {
   render() {
     return (
-      <Container>
+      <Container textAlign={'center'}>
         <Header as='h2'>Search Computas.com</Header>
         <SearchUI />
       </Container>
